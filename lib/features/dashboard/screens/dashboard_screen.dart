@@ -29,11 +29,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _cargarDatosIniciales() async {
     // Carga los datos de los providers necesarios
     final contextRead = context;
+    await Provider.of<AvesProvider>(contextRead, listen: false).loadLotes();
+    await Provider.of<AvesProvider>(contextRead, listen: false).verificarYEliminarLotesVacios();
     await Provider.of<HuevosProvider>(contextRead, listen: false).cargarHuevosHoy();
     final provider = Provider.of<TransaccionesProvider>(context, listen: false);
     provider.totalIngresos = await provider.getTotalMes('ingreso');
     provider.totalGastos = await provider.getTotalMes('gasto');
-    // Si tienes otros providers, agrégalos aquí
+  }
+
+  Future<void> recargarDashboard() async {
+    // Aquí puedes recargar los providers que necesites
+    await Provider.of<AvesProvider>(context, listen: false).loadLotes();
+    await Provider.of<AvesProvider>(context, listen: false).verificarYEliminarLotesVacios();
+    await Provider.of<HuevosProvider>(context, listen: false).cargarHuevosHoy();
+    final provider = Provider.of<TransaccionesProvider>(context, listen: false);
+    provider.totalIngresos = await provider.getTotalMes('ingreso');
+    provider.totalGastos = await provider.getTotalMes('gasto');
   }
 
   @override
@@ -42,12 +53,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       EasyLoading.dismiss();
     });
     final avesProvider = Provider.of<AvesProvider>(context);
-
-    Future<void> recargarDashboard() async {
-      // Aquí puedes recargar los providers que necesites
-      await Provider.of<AvesProvider>(context, listen: false).loadLotes();
-      // Si tienes otros providers, agrégalos aquí
-    }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -63,15 +68,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           RefreshIndicator(
             onRefresh: recargarDashboard,
             child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(), // Importante para que funcione el pull-to-refresh
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
                   // Tarjeta de lotes activos
                   Card(
-                    color: Colors.white.withOpacity(
-                      0.70,
-                    ), // Fondo blanco translúcido
+                    color: Colors.white.withOpacity(0.70),
                     elevation: 4,
                     margin: const EdgeInsets.only(bottom: 20),
                     shape: RoundedRectangleBorder(
@@ -188,10 +191,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       ),
                                       onPressed: () async {
                                         await provider.agregarHuevos(1);
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
                                             content: Text('+1 huevo agregado'),
                                           ),
                                         );
@@ -222,9 +223,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     backgroundColor: AppColors.verdePasto,
                                     foregroundColor: Colors.white,
                                     textStyle: const TextStyle(fontSize: 18),
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
                                   ),
                                 ),
                               ],
@@ -234,13 +233,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       );
                     },
                   ),
+
                   MortalidadCard(
-                    onTap:
-                        () => Navigator.pushNamed(
-                          context,
-                          AppRoutes.registrarMortalidad,
-                        ),
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.registrarMortalidad,
+                    ),
                   ),
+
+                  const SizedBox(height: 20),
+
                   // BalanceCard usando el provider
                   Consumer<TransaccionesProvider>(
                     builder: (context, provider, _) {
@@ -250,8 +252,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       );
                     },
                   ),
+
                   const SizedBox(height: 20),
-                  // Aquí puedes agregar más tarjetas para gastos, etc.
                 ],
               ),
             ),
@@ -259,16 +261,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       bottomNavigationBar: CustomBottomNav(
-        currentIndex: 0, // Siempre 0 porque es el dashboard
+        currentIndex: 0,
         onTap: (index) {
           final routes = [
-            AppRoutes.dashboard, // Índice 0
-            AppRoutes.registroHuevos, // Índice 1
-            AppRoutes.listLotes, // Índice 2
-            AppRoutes.ventas, // Índice 3
+            AppRoutes.dashboard,
+            AppRoutes.registroHuevos,
+            AppRoutes.listLotes,
+            AppRoutes.ventas,
           ];
           if (index != 0) {
-            // Evitar recargar el dashboard
             Navigator.pushNamed(context, routes[index]);
           }
         },

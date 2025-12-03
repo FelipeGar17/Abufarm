@@ -35,12 +35,27 @@ class AvesProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteLote(int id) async {
+  Future<void> eliminarLote(int id) async {
     final db = await _dbHelper.database;
+    
+    // Eliminar de la base de datos
     await db.delete('lotes', where: 'id = ?', whereArgs: [id]);
     
+    // Eliminar de la lista en memoria
     _lotes.removeWhere((lote) => lote.id == id);
+    
     notifyListeners();
+  }
+
+  // Método para verificar y eliminar automáticamente lotes con 0 aves
+  Future<void> verificarYEliminarLotesVacios() async {
+    final lotesVacios = _lotes.where((lote) => lote.cantidadInicial == 0).toList();
+    
+    for (var lote in lotesVacios) {
+      if (lote.id != null) {
+        await eliminarLote(lote.id!);
+      }
+    }
   }
 
   Future<void> actualizarLote(
@@ -50,6 +65,7 @@ class AvesProvider with ChangeNotifier {
     String? proveedor,
     String? alimentoTipo,
     String? observaciones,
+    int? edadInicial,
   }) async {
     final db = await _dbHelper.database;
     await db.update(
@@ -60,11 +76,19 @@ class AvesProvider with ChangeNotifier {
         'proveedor': proveedor,
         'alimento_tipo': alimentoTipo,
         'observaciones': observaciones,
+        'edad_inicial': edadInicial,
       },
       where: 'id = ?',
       whereArgs: [id],
     );
+    
     await loadLotes(); // Refrescar datos
+    
+    // Si la cantidad es 0, eliminar el lote automáticamente
+    if (cantidad == 0) {
+      await eliminarLote(id);
+      // Mostrar notificación (opcional, puedes hacerlo en el UI)
+    }
   }
 
   Lote getLoteById(int id) {

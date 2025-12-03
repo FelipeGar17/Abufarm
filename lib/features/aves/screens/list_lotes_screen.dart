@@ -190,8 +190,7 @@ class _ListLotesScreenState extends State<ListLotesScreen> {
                                   children: [
                                     Expanded(
                                       child: ElevatedButton(
-                                        onPressed:
-                                            () => _editarLote(context, lote),
+                                        onPressed: () => _editarLote(context, lote),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor:
                                               const Color.fromARGB(255, 216, 170, 43),
@@ -200,19 +199,29 @@ class _ListLotesScreenState extends State<ListLotesScreen> {
                                         child: const Text('Editar'),
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: ElevatedButton(
-                                        onPressed:
-                                            () => _clasificarPollitos(
-                                              context,
-                                              lote,
-                                            ),
+                                        onPressed: () => _clasificarPollitos(
+                                          context,
+                                          lote,
+                                        ),
                                         style: ElevatedButton.styleFrom(
                                           backgroundColor: AppColors.verdePasto,
                                           foregroundColor: Colors.white,
                                         ),
                                         child: const Text('Clasificar'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () => _eliminarLote(context, lote),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.red[700],
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        child: const Text('Eliminar'),
                                       ),
                                     ),
                                   ],
@@ -339,6 +348,41 @@ class _ListLotesScreenState extends State<ListLotesScreen> {
           Text(
             value,
             style: TextStyle(color: AppColors.cafeTierra, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _eliminarLote(BuildContext context, Lote lote) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Eliminación'),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar el Lote #${lote.id}?\n\n'
+          'Tipo: ${_getTipoName(lote.tipo)}\n'
+          'Cantidad: ${lote.cantidadInicial} aves\n\n'
+          'Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await context.read<AvesProvider>().eliminarLote(lote.id!);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Lote eliminado exitosamente'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Eliminar'),
           ),
         ],
       ),
